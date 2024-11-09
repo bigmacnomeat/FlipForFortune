@@ -1,114 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flip for Fortune Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        h1 {
-            color: #333;
-        }
-        .button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 10px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .button:hover {
-            background-color: #0056b3;
-        }
-        #bet-amount {
-            margin: 10px;
-            padding: 10px;
-            font-size: 16px;
-        }
-        #status {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solana Wallet Connection</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="container">
+    <h1>Connect to Solana Wallet</h1>
+    <input type="text" id="secretKeyInput" placeholder="Enter Secret Key (Base58)">
+    <button id="connectButton">Connect Wallet</button>
+    <p id="status">Wallet Not Connected</p>
+    <button id="sendTransactionButton" style="display:none;">Send Transaction</button>
+    <div id="transactionStatus"></div>
+  </div>
 
-    <h1>Flip for Fortune Game</h1>
-
-    <!-- Connect Wallet Button -->
-    <button class="button" id="connect-btn">Connect Wallet</button>
-
-    <!-- Bet Amount Input -->
-    <input type="number" id="bet-amount" placeholder="Enter Bet Amount in SOL" step="0.01">
-
-    <!-- Flip Button -->
-    <button class="button" id="flip-btn">Flip Coin</button>
-
-    <!-- Status Area -->
-    <div id="status"></div>
-
-    <!-- Load Solana Web3.js via CDN -->
-    <script type="module">
-        import { Connection, PublicKey, clusterApiUrl, Keypair } from 'https://cdn.skypack.dev/@solana/web3.js';
-        
-        // Initialize connection to Solana devnet
-        const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-        
-        // Connect to Phantom Wallet
-        const connectButton = document.getElementById('connect-btn');
-        const flipButton = document.getElementById('flip-btn');
-        const betAmountInput = document.getElementById('bet-amount');
-        const statusDiv = document.getElementById('status');
-        
-        connectButton.addEventListener('click', async () => {
-            try {
-                if (window.solana && window.solana.isPhantom) {
-                    await window.solana.connect();
-                    connectButton.textContent = 'Wallet Connected';
-                    flipButton.disabled = false;
-                } else {
-                    alert('Please install Phantom Wallet');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('Error connecting wallet');
-            }
-        });
-
-        flipButton.addEventListener('click', async () => {
-            const betAmount = parseFloat(betAmountInput.value);
-            if (isNaN(betAmount) || betAmount <= 0) {
-                alert('Please enter a valid bet amount');
-                return;
-            }
-
-            const userPublicKey = window.solana.publicKey.toString();
-            statusDiv.textContent = `Flipping... Bet Amount: ${betAmount} SOL`;
-
-            // You can now interact with Solana here, such as submitting a transaction for the flip
-            try {
-                // Example logic: simulate a simple "heads" or "tails" flip
-                const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
-                statusDiv.textContent = `You flipped: ${result}`;
-                
-                // Update Firestore or any backend with the result
-                // For example, send the result to Firestore as mentioned before
-                
-            } catch (error) {
-                console.error('Error during flip:', error);
-                statusDiv.textContent = 'Error during flip';
-            }
-        });
-    </script>
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.40.0/dist/solana-web3.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

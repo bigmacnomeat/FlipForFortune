@@ -1,4 +1,4 @@
-// Import Firebase SDK
+// Import Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 
@@ -59,12 +59,14 @@ flipButton.addEventListener('click', async () => {
 
   // Create a transaction and send some lamports
   try {
-    const fromKeypair = Keypair.generate();
-    const toKeypair = Keypair.generate();
+    // Set up the "from" and "to" wallet addresses for the transaction
+    const recipientWallet = flipResult === 'Heads' ? walletPublicKey : "BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr"; // Loss wallet
+
+    // Create a transaction
     const transaction = new Transaction().add(
       SystemProgram.transfer({
-        fromPubkey: walletPublicKey,
-        toPubkey: toKeypair.publicKey,
+        fromPubkey: walletPublicKey,  // This is the connected wallet's public key
+        toPubkey: recipientWallet,    // The recipient wallet (either the player's wallet or the loss wallet)
         lamports: LAMPORTS_PER_SOL / 100, // Small transaction for demonstration
       })
     );

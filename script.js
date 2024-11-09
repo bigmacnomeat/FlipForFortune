@@ -1,6 +1,6 @@
-// Import Firebase SDKs
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+// Import Firebase SDKs using modular imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js";
 
 // Solana Web3.js for wallet interaction
 import { Connection, Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL, clusterApiUrl } from 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.38.0/dist/solana-web3.js';
@@ -17,7 +17,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);  // Correct method for modular Firebase SDK
 const analytics = getAnalytics(app);
 
 // Set up Solana connection

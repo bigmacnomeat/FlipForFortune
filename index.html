@@ -5,19 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flip for Fortune</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Solana Web3.js Library -->
+    <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Flip for Fortune</h1>
         <button id="connectButton">Connect Wallet</button>
-        <div id="status"></div>
-        <button id="betButton" disabled>Place 0.01 SOL Bet</button>
+        <p id="walletAddress">Wallet: Not Connected</p>
+        <button id="betButton" disabled>Place Bet: 0.01 SOL</button>
     </div>
-
-    <!-- Solana Web3.js Library -->
-    <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
-
+    
     <!-- Your custom script -->
-    <script type="module" src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

@@ -1,5 +1,4 @@
 let connection;
-let provider;
 let wallet;
 
 document.getElementById("connectButton").addEventListener("click", async () => {

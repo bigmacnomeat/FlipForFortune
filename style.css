@@ -1,32 +1,40 @@
 body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  padding: 50px;
-  background-color: #f4f4f9;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+}
+
+#wallet-info {
+    margin-bottom: 20px;
 }
 
 button {
-  font-size: 18px;
-  padding: 10px 20px;
-  margin: 20px;
-  border: none;
-  cursor: pointer;
-  background-color: #4CAF50;
-  color: white;
-  border-radius: 5px;
+    background-color: #28a745;
+    color: white;
+    font-size: 18px;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 10px;
 }
 
 button:hover {
-  background-color: #45a049;
-}
-
-#result {
-  font-size: 18px;
-  font-weight: bold;
-  margin-top: 20px;
-  color: #333;
+    background-color: #218838;
 }
 
 #game-container {
-  display: none;
+    margin-top: 30px;
+}
+
+#result {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+#wallet-address {
+    font-size: 16px;
+    margin-top: 10px;
+    color: #333;
 }

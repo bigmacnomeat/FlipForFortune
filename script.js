@@ -1,99 +1,80 @@
-// Firebase Configuration (Replace with your Firebase config)
+// Import Firebase SDK
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+
+// Solana Web3.js for wallet interaction
+import { Connection, Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL, clusterApiUrl } from 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.38.0/dist/solana-web3.js';
+
+// Your Firebase config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyA3WrlDgDgyIwDF-vHexWlqxs1IwVuEu9E",
+  authDomain: "flipforfortune-4ab65.firebaseapp.com",
+  projectId: "flipforfortune-4ab65",
+  storageBucket: "flipforfortune-4ab65.firebasestorage.app",
+  messagingSenderId: "959758907497",
+  appId: "1:959758907497:web:39e430a44ffe6f26114af8",
+  measurementId: "G-MMMB13NNQP"
 };
 
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(app);
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-// Solana connection setup
-const { Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection, clusterApiUrl } = window.solanaWeb3;
+// Set up Solana connection
+const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 
-// Global variables
-let userWallet = null;
-let connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+// Connect wallet button and event listener
+const connectWalletButton = document.getElementById('connectWalletButton');
+const walletInfoDiv = document.getElementById('walletInfo');
+const flipButton = document.getElementById('flipButton');
+const resultDiv = document.getElementById('result');
+const transactionStatusDiv = document.getElementById('transactionStatus');
 
-// Button to connect wallet
-document.getElementById('connectButton').onclick = async () => {
+let walletPublicKey = null;
+
+connectWalletButton.addEventListener('click', () => {
   if (window.solana && window.solana.isPhantom) {
-    try {
-      // Requesting the user to connect Phantom wallet
-      userWallet = await window.solana.connect();
-      document.getElementById('walletStatus').textContent = `Wallet connected: ${userWallet.publicKey.toString()}`;
-
-      // Show game interface
-      document.getElementById('flipGame').style.display = 'block';
-    } catch (err) {
-      document.getElementById('walletStatus').textContent = 'Failed to connect wallet';
-    }
+    window.solana.connect().then((response) => {
+      walletPublicKey = response.publicKey;
+      walletInfoDiv.textContent = `Connected: ${walletPublicKey.toString()}`;
+      connectWalletButton.disabled = true;
+      flipButton.disabled = false;
+    }).catch((err) => {
+      walletInfoDiv.textContent = 'Error connecting wallet';
+    });
   } else {
-    alert('Please install Phantom wallet to continue.');
+    walletInfoDiv.textContent = 'Please install Phantom Wallet';
   }
-};
+});
 
-// Coin flip game logic
-document.getElementById('flipButton').onclick = async () => {
-  const flipChoice = document.getElementById('flipChoice').value;
-  const betAmount = parseFloat(document.getElementById('betAmount').value);
-  
-  if (!betAmount || betAmount <= 0) {
-    document.getElementById('flipResult').textContent = 'Please enter a valid bet amount.';
+// Flip Coin game logic
+flipButton.addEventListener('click', async () => {
+  if (!walletPublicKey) {
+    resultDiv.textContent = 'Please connect your wallet first';
     return;
   }
 
-  if (userWallet) {
-    // Check user's balance
-    const balance = await connection.getBalance(userWallet.publicKey);
-    const userSOL = balance / LAMPORTS_PER_SOL;
-    
-    if (userSOL < betAmount) {
-      document.getElementById('flipResult').textContent = 'Insufficient balance to play!';
-      return;
-    }
+  const flipResult = Math.random() < 0.5 ? 'Heads' : 'Tails';
+  resultDiv.textContent = `Result: ${flipResult}`;
 
-    // Simulate coin flip
-    const flipOutcome = Math.random() < 0.5 ? 'heads' : 'tails';
-
-    // Send transaction (charge the user for betting)
+  // Create a transaction and send some lamports
+  try {
+    const fromKeypair = Keypair.generate();
+    const toKeypair = Keypair.generate();
     const transaction = new Transaction().add(
       SystemProgram.transfer({
-        fromPubkey: userWallet.publicKey,
-        toPubkey: userWallet.publicKey, // You can update this to send to a winner address
-        lamports: betAmount * LAMPORTS_PER_SOL,
+        fromPubkey: walletPublicKey,
+        toPubkey: toKeypair.publicKey,
+        lamports: LAMPORTS_PER_SOL / 100, // Small transaction for demonstration
       })
     );
 
-    try {
-      // Send the transaction to Solana
-      const signature = await connection.sendTransaction(transaction, [Keypair.fromSecretKey(new Uint8Array(userWallet.secretKey))]);
-
-      // Confirm transaction
-      await connection.confirmTransaction(signature);
-
-      // Log the outcome of the coin flip
-      if (flipChoice === flipOutcome) {
-        document.getElementById('flipResult').textContent = `You win! The coin landed on ${flipOutcome}.`;
-      } else {
-        document.getElementById('flipResult').textContent = `You lose! The coin landed on ${flipOutcome}.`;
-      }
-
-      // Log result to Firebase (for records)
-      db.collection('gameResults').add({
-        publicKey: userWallet.publicKey.toString(),
-        flipChoice: flipChoice,
-        flipOutcome: flipOutcome,
-        betAmount: betAmount,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-
-    } catch (error) {
-      document.getElementById('flipResult').textContent = 'Transaction failed: ' + error.message;
-    }
+    // Sign the transaction
+    const signedTransaction = await window.solana.signTransaction(transaction);
+    const txId = await connection.sendRawTransaction(signedTransaction.serialize());
+    
+    transactionStatusDiv.textContent = `Transaction Sent: ${txId}`;
+  } catch (error) {
+    transactionStatusDiv.textContent = 'Transaction failed';
   }
-};
+});

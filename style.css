@@ -1,23 +1,67 @@
 body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin-top: 50px;
+  font-family: Arial, sans-serif;
+  background-color: #f7f7f7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+input[type="text"], input[type="number"], select {
+  width: 80%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 button {
-    padding: 10px 20px;
-    font-size: 16px;
-    margin: 10px;
-    cursor: pointer;
+  padding: 10px 20px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 10px;
 }
 
-button:disabled {
-    background-color: gray;
-    cursor: not-allowed;
+button:hover {
+  background-color: #0056b3;
 }
 
-#result {
-    margin-top: 20px;
-    font-size: 20px;
-    font-weight: bold;
+#status {
+  margin-top: 15px;
+  font-weight: bold;
+  color: green;
+}
+
+#transactionStatus {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+#flipGameSection {
+  margin-top: 30px;
+  font-size: 1.2rem;
+}
+
+#flipGameResult {
+  margin-top: 10px;
+  font-weight: bold;
 }

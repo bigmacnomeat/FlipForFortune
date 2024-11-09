@@ -1,34 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flip for Fortune - Coin Flip Game</title>
-  <link rel="stylesheet" href="style.css">
-  
-  <!-- Add Buffer Polyfill for the browser -->
-  <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
-
-  <!-- Solana Web3.js Library (IIFE version for browser use) -->
-  <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flip for Fortune</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <h1>Flip for Fortune</h1>
+        <button id="connectButton">Connect Wallet</button>
+        <div id="status"></div>
+        <button id="betButton" disabled>Place 0.01 SOL Bet</button>
+    </div>
 
-  <div id="wallet-info">
-    <button id="connect-wallet-btn">Connect Wallet</button>
-    <div id="wallet-address" style="display: none;"></div>
-  </div>
+    <!-- Solana Web3.js Library -->
+    <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
 
-  <div id="game-container" style="display: none;">
-    <h2>Coin Flip Game</h2>
-    <button id="heads-btn">Heads</button>
-    <button id="tails-btn">Tails</button>
-    <button id="bet-btn">Bet 0.01 SOL</button>
-    <div id="result" style="margin-top: 20px;"></div>
-  </div>
-
-  <!-- Script Tag for game logic -->
-  <script src="script.js"></script>
-
+    <!-- Your custom script -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>

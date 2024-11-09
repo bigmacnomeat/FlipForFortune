@@ -1,46 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flip for Fortune</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Solana Web3.js Library -->
-    <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
-    <!-- Firebase SDK -->
-    <script type="module">
-      // Import the functions you need from the SDKs you need
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
-
-      // Your web app's Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyA3WrlDgDgyIwDF-vHexWlqxs1IwVuEu9E",
-        authDomain: "flipforfortune-4ab65.firebaseapp.com",
-        projectId: "flipforfortune-4ab65",
-        storageBucket: "flipforfortune-4ab65.firebasestorage.app",
-        messagingSenderId: "959758907497",
-        appId: "1:959758907497:web:39e430a44ffe6f26114af8",
-        measurementId: "G-MMMB13NNQP"
-      };
-
-      // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flip for Fortune - Coin Flip Game</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Flip for Fortune</h1>
-        <button id="connect-wallet-btn">Connect Wallet</button>
-        <div id="wallet-address"></div>
-        <div id="game-container" style="display: none;">
-            <p id="coin-flip-result"></p>
-            <button id="heads-btn">Heads</button>
-            <button id="tails-btn">Tails</button>
-        </div>
-    </div>
 
-    <script src="script.js"></script>
+  <div id="wallet-info">
+    <button id="connect-wallet-btn">Connect Wallet</button>
+    <div id="wallet-address" style="display: none;"></div>
+  </div>
+
+  <div id="game-container" style="display: none;">
+    <h2>Coin Flip Game</h2>
+    <button id="heads-btn">Heads</button>
+    <button id="tails-btn">Tails</button>
+    <div id="result" style="margin-top: 20px;"></div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+
 </body>
 </html>

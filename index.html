@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flip for Fortune</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Buffer Polyfill -->
-    <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
-    <!-- Solana Web3.js Library (Browser Version) -->
+    <!-- Include base64-js library -->
+    <script src="https://cdn.jsdelivr.net/npm/base64-js@1.5.1/base64js.min.js"></script>
+    <!-- Solana Web3.js library -->
     <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
 </head>
 <body>
@@ -17,9 +16,7 @@
         <p id="walletAddress">Wallet: Not Connected</p>
         <button id="betButton" disabled>Place Bet: 0.01 SOL</button>
     </div>
-    
-    <!-- Custom Script for Game Logic -->
+
     <script src="script.js"></script>
 </body>
 </html>
-

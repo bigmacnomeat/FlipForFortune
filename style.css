@@ -1,57 +1,68 @@
+/* Basic reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+  background-color: #f4f4f9;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  margin: 0;
+  flex-direction: column;
 }
 
-.container {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 350px;
+.game-container {
   text-align: center;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 300px;
 }
 
 h1 {
-  font-size: 1.5rem;
   margin-bottom: 20px;
-}
-
-button, select, input {
-  padding: 10px;
-  width: 80%;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 1rem;
+  font-size: 24px;
+  color: #333;
 }
 
 button {
-  background-color: #007bff;
+  background-color: #3b82f6;
   color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 16px;
   cursor: pointer;
+  margin-bottom: 10px;
+  width: 100%;
+  transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #0056b3;
+button:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
 }
 
-#walletStatus {
-  font-weight: bold;
+button:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.flip-section {
   margin-top: 20px;
 }
 
-#flipResult {
-  font-weight: bold;
-  margin-top: 15px;
+p {
+  font-size: 18px;
+  margin-top: 10px;
 }
 
-#gameStatus {
+#transactionStatus {
   margin-top: 20px;
-  font-weight: bold;
+  font-size: 16px;
+  color: #333;
 }

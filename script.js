@@ -1,88 +1,68 @@
-let connection;
-let wallet;
+// Assuming you have already connected to Solana Wallet and obtained the user's public key
+let walletPublicKey = null;  // Replace with the actual wallet's public key
 
-document.getElementById("connectButton").addEventListener("click", async () => {
-    // Connect to Phantom Wallet (or other wallet that supports Solana)
-    if (window.solana && window.solana.isPhantom) {
-        try {
-            // Connect to wallet
-            await window.solana.connect();
-            wallet = window.solana;
-            connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-            
-            document.getElementById("walletAddress").textContent = `Wallet: ${wallet.publicKey.toString()}`;
-            document.getElementById("betButton").disabled = false;
-        } catch (err) {
-            console.error("Wallet connection failed:", err);
-        }
-    } else {
-        alert("Please install Phantom Wallet!");
+// Function to handle the connection and wallet initialization
+const connectButton = document.getElementById('connectButton');
+const betButton = document.getElementById('betButton');
+const walletAddressText = document.getElementById('walletAddress');
+
+connectButton.addEventListener('click', async () => {
+    try {
+        // Connect to the wallet (e.g., Phantom Wallet)
+        const { publicKey } = await window.solana.connect();
+        walletPublicKey = publicKey;
+        walletAddressText.textContent = `Wallet: ${walletPublicKey.toString()}`;
+        betButton.disabled = false; // Enable betting after connection
+    } catch (err) {
+        console.error('Failed to connect wallet:', err);
     }
 });
 
-document.getElementById("betButton").addEventListener("click", async () => {
-    // Bet amount is 0.01 SOL
-    const betAmount = 0.01 * solanaWeb3.LAMPORTS_PER_SOL;
-    const fromWallet = wallet.publicKey;
-    const toWallet = new solanaWeb3.PublicKey('BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr');
-    
-    const transaction = new solanaWeb3.Transaction().add(
-        solanaWeb3.SystemProgram.transfer({
-            fromPubkey: fromWallet,
-            toPubkey: toWallet,
-            lamports: betAmount
-        })
-    );
-
-    const recentBlockhash = await connection.getRecentBlockhash();
-    transaction.recentBlockhash = recentBlockhash.blockhash;
-    transaction.feePayer = fromWallet;
-
+// Function to handle the betting logic
+betButton.addEventListener('click', async () => {
     try {
-        // Sign the transaction
-        const signature = await window.solana.signTransaction(transaction);
+        if (!walletPublicKey) {
+            alert('Connect a wallet first!');
+            return;
+        }
+
+        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+        const fromWallet = walletPublicKey;  // Connected wallet
+        const toWallet = new solanaWeb3.PublicKey('BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr');  // Recipient wallet
+
+        // Transfer 0.01 SOL
+        const transaction = new solanaWeb3.Transaction().add(
+            solanaWeb3.SystemProgram.transfer({
+                fromPubkey: fromWallet,
+                toPubkey: toWallet,
+                lamports: 1000000000,  // 0.01 SOL (in lamports)
+            })
+        );
 
         // Send the transaction
-        const txid = await connection.sendRawTransaction(signature.serialize());
-        console.log("Transaction sent with ID:", txid);
-        await connection.confirmTransaction(txid);
-        
-        // Randomly decide win or lose (for demonstration)
-        const isWin = Math.random() < 0.5; // 50% chance
+        const { signature } = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [walletPublicKey]);
+        console.log('Transaction confirmed with signature:', signature);
 
-        if (isWin) {
-            console.log("You win! 0.02 SOL will be sent back.");
-            await sendSolToWallet(0.02, fromWallet);
+        // Check if the transaction was successful (you can add additional logic here)
+        const isWinner = Math.random() < 0.5;  // Random winner for demo (50% chance)
+        if (isWinner) {
+            // If the user wins, send 0.02 SOL to the connected wallet
+            const winTransaction = new solanaWeb3.Transaction().add(
+                solanaWeb3.SystemProgram.transfer({
+                    fromPubkey: toWallet,  // BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr wallet
+                    toPubkey: fromWallet,  // User's wallet
+                    lamports: 2000000000,  // 0.02 SOL
+                })
+            );
+            await solanaWeb3.sendAndConfirmTransaction(connection, winTransaction, [walletPublicKey]);
+            alert('You win! 0.02 SOL sent to your wallet.');
         } else {
-            console.log("You lose. Your 0.01 SOL is transferred.");
+            // If the user loses, nothing more happens (since the bet is lost)
+            alert('You lose! 0.01 SOL has been sent to the house.');
         }
+
     } catch (err) {
-        console.error("Transaction failed:", err);
+        console.error('Transaction failed:', err);
+        alert('Transaction failed. Please try again.');
     }
 });
-
-async function sendSolToWallet(amount, toWallet) {
-    const transaction = new solanaWeb3.Transaction().add(
-        solanaWeb3.SystemProgram.transfer({
-            fromPubkey: wallet.publicKey,
-            toPubkey: toWallet,
-            lamports: amount * solanaWeb3.LAMPORTS_PER_SOL
-        })
-    );
-
-    const recentBlockhash = await connection.getRecentBlockhash();
-    transaction.recentBlockhash = recentBlockhash.blockhash;
-    transaction.feePayer = wallet.publicKey;
-
-    try {
-        // Sign the transaction
-        const signature = await window.solana.signTransaction(transaction);
-
-        // Send the transaction
-        const txid = await connection.sendRawTransaction(signature.serialize());
-        console.log("Transaction sent with ID:", txid);
-        await connection.confirmTransaction(txid);
-    } catch (err) {
-        console.error("Transaction failed:", err);
-    }
-}

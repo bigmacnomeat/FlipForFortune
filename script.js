@@ -1,103 +1,99 @@
-window.onload = () => {
-  const { Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection, clusterApiUrl } = window.solanaWeb3;
+// Firebase Configuration (Replace with your Firebase config)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
+};
 
-  let userKeypair = null;
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore(app);
 
-  // Button to connect wallet
-  document.getElementById("connectButton").onclick = () => {
-    const secretKeyInput = document.getElementById("secretKeyInput").value;
+// Solana connection setup
+const { Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection, clusterApiUrl } = window.solanaWeb3;
+
+// Global variables
+let userWallet = null;
+let connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+
+// Button to connect wallet
+document.getElementById('connectButton').onclick = async () => {
+  if (window.solana && window.solana.isPhantom) {
+    try {
+      // Requesting the user to connect Phantom wallet
+      userWallet = await window.solana.connect();
+      document.getElementById('walletStatus').textContent = `Wallet connected: ${userWallet.publicKey.toString()}`;
+
+      // Show game interface
+      document.getElementById('flipGame').style.display = 'block';
+    } catch (err) {
+      document.getElementById('walletStatus').textContent = 'Failed to connect wallet';
+    }
+  } else {
+    alert('Please install Phantom wallet to continue.');
+  }
+};
+
+// Coin flip game logic
+document.getElementById('flipButton').onclick = async () => {
+  const flipChoice = document.getElementById('flipChoice').value;
+  const betAmount = parseFloat(document.getElementById('betAmount').value);
+  
+  if (!betAmount || betAmount <= 0) {
+    document.getElementById('flipResult').textContent = 'Please enter a valid bet amount.';
+    return;
+  }
+
+  if (userWallet) {
+    // Check user's balance
+    const balance = await connection.getBalance(userWallet.publicKey);
+    const userSOL = balance / LAMPORTS_PER_SOL;
     
-    if (secretKeyInput) {
-      try {
-        // Decode the secret key and generate the Keypair
-        const secretKeyBytes = Uint8Array.from(atob(secretKeyInput), c => c.charCodeAt(0));
-        userKeypair = Keypair.fromSecretKey(secretKeyBytes);
-
-        // Display wallet public key
-        document.getElementById("status").textContent = `Wallet connected: ${userKeypair.publicKey.toBase58()}`;
-
-        // Show transaction button and Flip Game section
-        document.getElementById("sendTransactionButton").style.display = "inline-block";
-        document.getElementById("flipGameSection").style.display = "block";
-      } catch (error) {
-        document.getElementById("status").textContent = "Error: Invalid Secret Key!";
-      }
-    }
-  };
-
-  // Button to send a transaction (optional, part of wallet functionality)
-  document.getElementById("sendTransactionButton").onclick = async () => {
-    if (userKeypair) {
-      const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-
-      // Generate a new recipient Keypair for demonstration
-      const recipientKeypair = Keypair.generate();
-
-      // Create a new transaction with transfer instruction
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: userKeypair.publicKey,
-          toPubkey: recipientKeypair.publicKey,
-          lamports: LAMPORTS_PER_SOL, // 1 SOL
-        })
-      );
-
-      // Send the transaction
-      try {
-        const signature = await connection.sendTransaction(transaction, [userKeypair]);
-        document.getElementById("transactionStatus").textContent = `Transaction sent! Signature: ${signature}`;
-      } catch (error) {
-        document.getElementById("transactionStatus").textContent = `Transaction failed: ${error.message}`;
-      }
-    }
-  };
-
-  // Flip Game logic
-  document.getElementById("flipButton").onclick = async () => {
-    const flipChoice = document.getElementById("flipChoice").value;
-    const flipBetAmount = parseFloat(document.getElementById("flipBetAmount").value);
-
-    if (!flipBetAmount || flipBetAmount <= 0) {
-      document.getElementById("flipGameResult").textContent = "Please enter a valid bet amount!";
+    if (userSOL < betAmount) {
+      document.getElementById('flipResult').textContent = 'Insufficient balance to play!';
       return;
     }
 
-    if (userKeypair) {
-      const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-      const flipOutcome = Math.random() < 0.5 ? "heads" : "tails"; // Randomly choose heads or tails
+    // Simulate coin flip
+    const flipOutcome = Math.random() < 0.5 ? 'heads' : 'tails';
 
-      // Check if the user has enough SOL to play
-      const userBalance = await connection.getBalance(userKeypair.publicKey);
-      const userSOLBalance = userBalance / LAMPORTS_PER_SOL;
+    // Send transaction (charge the user for betting)
+    const transaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: userWallet.publicKey,
+        toPubkey: userWallet.publicKey, // You can update this to send to a winner address
+        lamports: betAmount * LAMPORTS_PER_SOL,
+      })
+    );
 
-      if (userSOLBalance < flipBetAmount) {
-        document.getElementById("flipGameResult").textContent = "Insufficient balance for the bet!";
-        return;
+    try {
+      // Send the transaction to Solana
+      const signature = await connection.sendTransaction(transaction, [Keypair.fromSecretKey(new Uint8Array(userWallet.secretKey))]);
+
+      // Confirm transaction
+      await connection.confirmTransaction(signature);
+
+      // Log the outcome of the coin flip
+      if (flipChoice === flipOutcome) {
+        document.getElementById('flipResult').textContent = `You win! The coin landed on ${flipOutcome}.`;
+      } else {
+        document.getElementById('flipResult').textContent = `You lose! The coin landed on ${flipOutcome}.`;
       }
 
-      // Create a transaction to send the bet amount
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: userKeypair.publicKey,
-          toPubkey: userKeypair.publicKey, // You can replace this with a winner's address if you like
-          lamports: flipBetAmount * LAMPORTS_PER_SOL,
-        })
-      );
+      // Log result to Firebase (for records)
+      db.collection('gameResults').add({
+        publicKey: userWallet.publicKey.toString(),
+        flipChoice: flipChoice,
+        flipOutcome: flipOutcome,
+        betAmount: betAmount,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
 
-      try {
-        // Send the transaction
-        const signature = await connection.sendTransaction(transaction, [userKeypair]);
-        await connection.confirmTransaction(signature);
-
-        // Determine the result
-        if (flipChoice === flipOutcome) {
-          document.getElementById("flipGameResult").textContent = `You win! The coin landed on ${flipOutcome}.`;
-        } else {
-          document.getElementById("flipGameResult").textContent = `You lose! The coin landed on ${flipOutcome}.`;
-        }
-      } catch (error) {
-        document.getElementById("flipGameResult").textContent = `Transaction failed: ${error.message}`;
-      }
+    } catch (error) {
+      document.getElementById('flipResult').textContent = 'Transaction failed: ' + error.message;
     }
-  };
+  }
 };

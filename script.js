@@ -1,66 +1,103 @@
-// Import the necessary libraries for Solana connection and Firestore
-import { Connection, PublicKey } from 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.67.0/dist/index.iife.js'; // Use CDN for browser compatibility
-import { getFirestore, collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js'; // Firebase Firestore CDN
+window.onload = () => {
+  const { Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL, Connection, clusterApiUrl } = window.solanaWeb3;
 
-// Initialize Firestore
-const db = getFirestore();
+  let userKeypair = null;
 
-// Connect to Solana wallet using Phantom
-let solanaProvider;
-if (window.solana && window.solana.isPhantom) {
-    solanaProvider = window.solana;
-} else {
-    alert("Phantom Wallet is required to play the coin flip game.");
-}
+  // Button to connect wallet
+  document.getElementById("connectButton").onclick = () => {
+    const secretKeyInput = document.getElementById("secretKeyInput").value;
+    
+    if (secretKeyInput) {
+      try {
+        // Decode the secret key and generate the Keypair
+        const secretKeyBytes = Uint8Array.from(atob(secretKeyInput), c => c.charCodeAt(0));
+        userKeypair = Keypair.fromSecretKey(secretKeyBytes);
 
-// Set up the Solana connection
-const solanaConnection = new Connection('https://api.mainnet-beta.solana.com');
+        // Display wallet public key
+        document.getElementById("status").textContent = `Wallet connected: ${userKeypair.publicKey.toBase58()}`;
 
-// Initialize Firestore collection for game data
-const gameCollection = collection(db, "coinFlipGames");
-
-// Handle the connection status of Phantom wallet
-const connectWallet = async () => {
-    if (solanaProvider) {
-        try {
-            const response = await solanaProvider.connect();
-            console.log('Connected to Solana wallet:', response.publicKey.toString());
-            return response.publicKey;
-        } catch (err) {
-            console.error('Failed to connect:', err);
-        }
-    } else {
-        console.error('No Phantom wallet found.');
+        // Show transaction button and Flip Game section
+        document.getElementById("sendTransactionButton").style.display = "inline-block";
+        document.getElementById("flipGameSection").style.display = "block";
+      } catch (error) {
+        document.getElementById("status").textContent = "Error: Invalid Secret Key!";
+      }
     }
-};
+  };
 
-// Function to start the coin flip game
-const flipCoin = async () => {
-    const userPublicKey = await connectWallet();
-    if (!userPublicKey) return;
+  // Button to send a transaction (optional, part of wallet functionality)
+  document.getElementById("sendTransactionButton").onclick = async () => {
+    if (userKeypair) {
+      const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 
-    const betAmount = parseFloat(document.getElementById('bet-amount').value);
-    if (isNaN(betAmount) || betAmount <= 0) {
-        alert("Please enter a valid bet amount.");
+      // Generate a new recipient Keypair for demonstration
+      const recipientKeypair = Keypair.generate();
+
+      // Create a new transaction with transfer instruction
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: userKeypair.publicKey,
+          toPubkey: recipientKeypair.publicKey,
+          lamports: LAMPORTS_PER_SOL, // 1 SOL
+        })
+      );
+
+      // Send the transaction
+      try {
+        const signature = await connection.sendTransaction(transaction, [userKeypair]);
+        document.getElementById("transactionStatus").textContent = `Transaction sent! Signature: ${signature}`;
+      } catch (error) {
+        document.getElementById("transactionStatus").textContent = `Transaction failed: ${error.message}`;
+      }
+    }
+  };
+
+  // Flip Game logic
+  document.getElementById("flipButton").onclick = async () => {
+    const flipChoice = document.getElementById("flipChoice").value;
+    const flipBetAmount = parseFloat(document.getElementById("flipBetAmount").value);
+
+    if (!flipBetAmount || flipBetAmount <= 0) {
+      document.getElementById("flipGameResult").textContent = "Please enter a valid bet amount!";
+      return;
+    }
+
+    if (userKeypair) {
+      const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+      const flipOutcome = Math.random() < 0.5 ? "heads" : "tails"; // Randomly choose heads or tails
+
+      // Check if the user has enough SOL to play
+      const userBalance = await connection.getBalance(userKeypair.publicKey);
+      const userSOLBalance = userBalance / LAMPORTS_PER_SOL;
+
+      if (userSOLBalance < flipBetAmount) {
+        document.getElementById("flipGameResult").textContent = "Insufficient balance for the bet!";
         return;
-    }
+      }
 
-    // Simulate a coin flip (heads or tails)
-    const flipResult = Math.random() > 0.5 ? 'Heads' : 'Tails';
-    const resultMessage = `You flipped: ${flipResult}`;
+      // Create a transaction to send the bet amount
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: userKeypair.publicKey,
+          toPubkey: userKeypair.publicKey, // You can replace this with a winner's address if you like
+          lamports: flipBetAmount * LAMPORTS_PER_SOL,
+        })
+      );
 
-    // Log the game result to Firestore
-    try {
-        await setDoc(doc(gameCollection, userPublicKey.toString()), {
-            betAmount: betAmount,
-            flipResult: flipResult,
-            timestamp: new Date()
-        });
-        alert(resultMessage);
-    } catch (err) {
-        console.error("Error saving game data:", err);
+      try {
+        // Send the transaction
+        const signature = await connection.sendTransaction(transaction, [userKeypair]);
+        await connection.confirmTransaction(signature);
+
+        // Determine the result
+        if (flipChoice === flipOutcome) {
+          document.getElementById("flipGameResult").textContent = `You win! The coin landed on ${flipOutcome}.`;
+        } else {
+          document.getElementById("flipGameResult").textContent = `You lose! The coin landed on ${flipOutcome}.`;
+        }
+      } catch (error) {
+        document.getElementById("flipGameResult").textContent = `Transaction failed: ${error.message}`;
+      }
     }
+  };
 };
-
-// Event listener for the "Flip" button
-document.getElementById('flip-btn').addEventListener('click', flipCoin);

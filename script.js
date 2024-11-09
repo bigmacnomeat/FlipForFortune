@@ -1,6 +1,6 @@
 // Import the necessary libraries for Solana connection and Firestore
-import { Connection, PublicKey } from '@solana/web3.js';
-import { getFirestore, collection, doc, setDoc } from 'firebase/firestore';
+import { Connection, PublicKey } from 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.67.0/dist/index.iife.js'; // Use CDN for browser compatibility
+import { getFirestore, collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js'; // Firebase Firestore CDN
 
 // Initialize Firestore
 const db = getFirestore();

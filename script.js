@@ -1,75 +1,89 @@
-import { Connection, PublicKey, Transaction, SystemProgram } from 'https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js';
+let connection;
+let provider;
+let wallet;
 
-const connectButton = document.getElementById("connectButton");
-const betButton = document.getElementById("betButton");
-const statusElement = document.getElementById("status");
-
-let walletPublicKey = null;
-let connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
-
-const winningWallet = new PublicKey("BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr");  // Predefined wallet for winnings
-
-// Connect wallet button click handler
-connectButton.addEventListener("click", async () => {
+document.getElementById("connectButton").addEventListener("click", async () => {
+    // Connect to Phantom Wallet (or other wallet that supports Solana)
     if (window.solana && window.solana.isPhantom) {
         try {
-            await window.solana.connect();  // Connect the wallet
-            walletPublicKey = window.solana.publicKey;
-            connectButton.innerText = "Wallet Connected";
-            statusElement.innerText = `Wallet Address: ${walletPublicKey.toString()}`;
-            betButton.disabled = false;  // Enable the bet button
+            // Connect to wallet
+            await window.solana.connect();
+            wallet = window.solana;
+            connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+            
+            document.getElementById("walletAddress").textContent = `Wallet: ${wallet.publicKey.toString()}`;
+            document.getElementById("betButton").disabled = false;
         } catch (err) {
-            console.error(err);
-            statusElement.innerText = "Failed to connect wallet.";
+            console.error("Wallet connection failed:", err);
         }
     } else {
-        statusElement.innerText = "Please install Phantom wallet.";
+        alert("Please install Phantom Wallet!");
     }
 });
 
-// Bet button click handler
-betButton.addEventListener("click", async () => {
-    if (!walletPublicKey) {
-        statusElement.innerText = "Please connect your wallet first.";
-        return;
-    }
+document.getElementById("betButton").addEventListener("click", async () => {
+    // Bet amount is 0.01 SOL
+    const betAmount = 0.01 * solanaWeb3.LAMPORTS_PER_SOL;
+    const fromWallet = wallet.publicKey;
+    const toWallet = new solanaWeb3.PublicKey('BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr');
+    
+    const transaction = new solanaWeb3.Transaction().add(
+        solanaWeb3.SystemProgram.transfer({
+            fromPubkey: fromWallet,
+            toPubkey: toWallet,
+            lamports: betAmount
+        })
+    );
 
-    const betAmount = 0.01;  // Bet amount in SOL
-    const prizeAmount = 0.02;  // Prize amount in SOL
+    const recentBlockhash = await connection.getRecentBlockhash();
+    transaction.recentBlockhash = recentBlockhash.blockhash;
+    transaction.feePayer = fromWallet;
 
     try {
-        const transaction = new Transaction().add(
-            SystemProgram.transfer({
-                fromPubkey: walletPublicKey,
-                toPubkey: winningWallet,
-                lamports: betAmount * 1e9,  // Convert SOL to lamports
-            })
-        );
+        // Sign the transaction
+        const signature = await window.solana.signTransaction(transaction);
 
-        const signature = await window.solana.signAndSendTransaction(transaction);
-        await connection.confirmTransaction(signature);
+        // Send the transaction
+        const txid = await connection.sendRawTransaction(signature.serialize());
+        console.log("Transaction sent with ID:", txid);
+        await connection.confirmTransaction(txid);
+        
+        // Randomly decide win or lose (for demonstration)
+        const isWin = Math.random() < 0.5; // 50% chance
 
-        const win = Math.random() < 0.5;  // Random coin flip (50% chance)
-        const resultMessage = win ? "You win!" : "You lose.";
-
-        // Send prize or deduct bet based on the result
-        if (win) {
-            const prizeTransaction = new Transaction().add(
-                SystemProgram.transfer({
-                    fromPubkey: winningWallet,
-                    toPubkey: walletPublicKey,
-                    lamports: prizeAmount * 1e9,  // Convert SOL to lamports
-                })
-            );
-
-            const prizeSignature = await window.solana.signAndSendTransaction(prizeTransaction);
-            await connection.confirmTransaction(prizeSignature);
-            statusElement.innerText = `${resultMessage} You received 0.02 SOL from the wallet!`;
+        if (isWin) {
+            console.log("You win! 0.02 SOL will be sent back.");
+            await sendSolToWallet(0.02, fromWallet);
         } else {
-            statusElement.innerText = `${resultMessage} Your 0.01 SOL has been sent to the wallet.`;
+            console.log("You lose. Your 0.01 SOL is transferred.");
         }
     } catch (err) {
-        console.error(err);
-        statusElement.innerText = "Transaction failed.";
+        console.error("Transaction failed:", err);
     }
 });
+
+async function sendSolToWallet(amount, toWallet) {
+    const transaction = new solanaWeb3.Transaction().add(
+        solanaWeb3.SystemProgram.transfer({
+            fromPubkey: wallet.publicKey,
+            toPubkey: toWallet,
+            lamports: amount * solanaWeb3.LAMPORTS_PER_SOL
+        })
+    );
+
+    const recentBlockhash = await connection.getRecentBlockhash();
+    transaction.recentBlockhash = recentBlockhash.blockhash;
+    transaction.feePayer = wallet.publicKey;
+
+    try {
+        // Sign the transaction
+        const signature = await window.solana.signTransaction(transaction);
+
+        // Send the transaction
+        const txid = await connection.sendRawTransaction(signature.serialize());
+        console.log("Transaction sent with ID:", txid);
+        await connection.confirmTransaction(txid);
+    } catch (err) {
+        console.error("Transaction failed:", err);
+    }
+}

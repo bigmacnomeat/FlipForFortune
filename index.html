@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solana Wallet Connection</title>
+  <title>Solana Wallet & Flip Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,6 +13,19 @@
     <button id="connectButton">Connect Wallet</button>
     <p id="status">Wallet Not Connected</p>
     <button id="sendTransactionButton" style="display:none;">Send Transaction</button>
+    
+    <div id="flipGameSection" style="display:none;">
+      <h2>Flip Game</h2>
+      <p>Choose Heads or Tails, and place your bet!</p>
+      <select id="flipChoice">
+        <option value="heads">Heads</option>
+        <option value="tails">Tails</option>
+      </select>
+      <input type="number" id="flipBetAmount" placeholder="Enter bet amount (SOL)">
+      <button id="flipButton">Flip!</button>
+      <p id="flipGameResult"></p>
+    </div>
+
     <div id="transactionStatus"></div>
   </div>
 

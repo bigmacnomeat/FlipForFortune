@@ -3,24 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coin Flip Game</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Flip for Fortune Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            color: #333;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        #bet-amount {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
-    <div class="game-container">
-        <button id="connect-btn">Connect Wallet</button>
-        <div id="wallet-address"></div>
-        <div id="flip-section" style="display:none;">
-            <button id="heads-btn">Heads</button>
-            <button id="tails-btn">Tails</button>
-            <button id="flip-btn">Flip Coin</button>
-        </div>
-        <div id="result"></div>
-    </div>
 
-    <script src="https://unpkg.com/@solana/web3.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-wallets"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-react"></script>
-    <script src="script.js"></script>
+    <h1>Flip for Fortune Game</h1>
+
+    <!-- Connect Wallet Button -->
+    <button class="button" id="connect-btn">Connect Wallet</button>
+
+    <!-- Bet Amount Input -->
+    <input type="number" id="bet-amount" placeholder="Enter Bet Amount in SOL" step="0.01">
+
+    <!-- Flip Button -->
+    <button class="button" id="flip-btn">Flip Coin</button>
+
+    <!-- Status Area -->
+    <div id="status"></div>
+
+    <!-- Include the JavaScript module -->
+    <script type="module" src="script.js"></script>
+
 </body>
 </html>

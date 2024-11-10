@@ -3,19 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flip for Fortune</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Solana Wallet Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background-color: #005bb5;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Flip for Fortune</h1>
-        <button id="connectWalletButton">Connect Wallet</button>
+        <h1>Connect Your Wallet</h1>
+        <button id="connectButton">Connect Wallet</button>
         <p id="walletAddress"></p>
-        <button id="betButton" style="display:none;">Place Bet 0.01 SOL</button>
         <p id="status"></p>
     </div>
 
     <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
-    <script src="script.js"></script>
+    <script>
+        const connectButton = document.getElementById('connectButton');
+        const walletAddressDisplay = document.getElementById('walletAddress');
+        const statusDisplay = document.getElementById('status');
+        let userWalletPublicKey = null; // Will store the user's wallet public key after connection
+
+        // Connect wallet event listener
+        connectButton.addEventListener('click', async () => {
+            try {
+                const provider = window.solana;
+                if (!provider) {
+                    alert("Please install a Solana wallet like Phantom to connect.");
+                    return;
+                }
+
+                // Connect to the wallet
+                const response = await provider.connect();
+                userWalletPublicKey = response.publicKey;
+
+                // Display wallet address
+                walletAddressDisplay.textContent = `Connected Wallet: ${userWalletPublicKey.toString()}`;
+
+                // Change status
+                statusDisplay.textContent = "Wallet successfully connected!";
+                connectButton.textContent = "Disconnect Wallet";
+            } catch (error) {
+                console.error('Error connecting to wallet:', error);
+                alert('Failed to connect wallet.');
+            }
+        });
+    </script>
 </body>
 </html>

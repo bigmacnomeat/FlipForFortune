@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solana Coin Flip Game</title>
     <style>
-        /* Styles here */
+        /* Basic styling */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -54,8 +54,12 @@
         </div>
     </div>
 
-    <!-- Buffer polyfill (for Solana web3.js compatibility) -->
+    <!-- Buffer polyfill for Solana web3.js compatibility -->
     <script src="https://cdn.jsdelivr.net/npm/buffer@5.7.1/index.min.js"></script>
+    <script>
+        // Set up Buffer globally for browser compatibility
+        window.Buffer = window.buffer.Buffer;
+    </script>
 
     <!-- Solana Web3.js library -->
     <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
@@ -63,7 +67,7 @@
     <!-- base64-js library from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/base64-js@1.5.1/base64js.min.js"></script>
 
-    <!-- Main script -->
+    <!-- Main script for the game logic -->
     <script src="script.js"></script>
 </body>
 </html>

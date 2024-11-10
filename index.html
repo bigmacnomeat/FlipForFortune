@@ -4,19 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flip for Fortune</title>
-    <!-- Include base64-js library -->
-    <script src="https://cdn.jsdelivr.net/npm/base64-js@1.5.1/base64js.min.js"></script>
-    <!-- Solana Web3.js library -->
-    <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>Flip for Fortune</h1>
-        <button id="connectButton">Connect Wallet</button>
-        <p id="walletAddress">Wallet: Not Connected</p>
-        <button id="betButton" disabled>Place Bet: 0.01 SOL</button>
+        <button id="connectWalletButton">Connect Wallet</button>
+        <p id="walletAddress"></p>
+        <button id="betButton" style="display:none;">Place Bet 0.01 SOL</button>
+        <p id="status"></p>
     </div>
 
+    <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

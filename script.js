@@ -1,68 +1,122 @@
-// Assuming you have already connected to Solana Wallet and obtained the user's public key
-let walletPublicKey = null;  // Replace with the actual wallet's public key
+// Import Solana Web3.js library from CDN
+const { Connection, PublicKey, Transaction, SystemProgram } = window.solanaWeb3;
 
-// Function to handle the connection and wallet initialization
-const connectButton = document.getElementById('connectButton');
+// Solana RPC URL (Mainnet Beta)
+const rpcUrl = "https://api.mainnet-beta.solana.com";
+const connection = new Connection(rpcUrl, "confirmed");
+
+// House wallet address (the wallet that will receive the SOL based on the game result)
+const houseWallet = new PublicKey("BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr");
+
+// DOM elements
+const connectWalletButton = document.getElementById('connectWalletButton');
 const betButton = document.getElementById('betButton');
-const walletAddressText = document.getElementById('walletAddress');
+const walletAddressDisplay = document.getElementById('walletAddress');
+const statusDisplay = document.getElementById('status');
 
-connectButton.addEventListener('click', async () => {
-    try {
-        // Connect to the wallet (e.g., Phantom Wallet)
-        const { publicKey } = await window.solana.connect();
-        walletPublicKey = publicKey;
-        walletAddressText.textContent = `Wallet: ${walletPublicKey.toString()}`;
-        betButton.disabled = false; // Enable betting after connection
-    } catch (err) {
-        console.error('Failed to connect wallet:', err);
-    }
-});
+let userWalletPublicKey = null; // Will store the user's wallet public key after connection
 
-// Function to handle the betting logic
-betButton.addEventListener('click', async () => {
+// Connect Wallet Function
+async function connectWallet() {
     try {
-        if (!walletPublicKey) {
-            alert('Connect a wallet first!');
+        const provider = window.solana;
+        if (!provider) {
+            alert("Please install a Solana wallet like Phantom to connect.");
             return;
         }
 
-        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
-        const fromWallet = walletPublicKey;  // Connected wallet
-        const toWallet = new solanaWeb3.PublicKey('BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr');  // Recipient wallet
+        // Connect to the wallet
+        const response = await provider.connect();
+        userWalletPublicKey = response.publicKey;
+        
+        // Display wallet address
+        walletAddressDisplay.textContent = `Connected Wallet: ${userWalletPublicKey.toString()}`;
 
-        // Transfer 0.01 SOL
-        const transaction = new solanaWeb3.Transaction().add(
-            solanaWeb3.SystemProgram.transfer({
-                fromPubkey: fromWallet,
-                toPubkey: toWallet,
-                lamports: 1000000000,  // 0.01 SOL (in lamports)
+        // Show the Bet button
+        betButton.style.display = 'inline-block';
+    } catch (error) {
+        console.error('Error connecting to wallet:', error);
+        alert('Failed to connect wallet.');
+    }
+}
+
+// Bet Function - 0.01 SOL bet
+async function placeBet() {
+    try {
+        if (!userWalletPublicKey) {
+            alert("Please connect your wallet first.");
+            return;
+        }
+
+        // Define the transaction
+        const transaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: userWalletPublicKey,
+                toPubkey: houseWallet,
+                lamports: 0.01 * 1e9, // 0.01 SOL in lamports
             })
         );
 
         // Send the transaction
-        const { signature } = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [walletPublicKey]);
-        console.log('Transaction confirmed with signature:', signature);
+        const provider = window.solana;
+        const { signature } = await provider.sendTransaction(transaction, [provider.publicKey]);
 
-        // Check if the transaction was successful (you can add additional logic here)
-        const isWinner = Math.random() < 0.5;  // Random winner for demo (50% chance)
-        if (isWinner) {
-            // If the user wins, send 0.02 SOL to the connected wallet
-            const winTransaction = new solanaWeb3.Transaction().add(
-                solanaWeb3.SystemProgram.transfer({
-                    fromPubkey: toWallet,  // BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr wallet
-                    toPubkey: fromWallet,  // User's wallet
-                    lamports: 2000000000,  // 0.02 SOL
-                })
-            );
-            await solanaWeb3.sendAndConfirmTransaction(connection, winTransaction, [walletPublicKey]);
-            alert('You win! 0.02 SOL sent to your wallet.');
-        } else {
-            // If the user loses, nothing more happens (since the bet is lost)
-            alert('You lose! 0.01 SOL has been sent to the house.');
-        }
-
-    } catch (err) {
-        console.error('Transaction failed:', err);
-        alert('Transaction failed. Please try again.');
+        // Confirm the transaction
+        await connection.confirmTransaction(signature);
+        
+        // Call the flipCoin function to determine win/loss
+        flipCoin();
+    } catch (error) {
+        console.error("Error placing bet:", error);
+        alert("Transaction failed.");
     }
-});
+}
+
+// Coin Flip Logic
+async function flipCoin() {
+    try {
+        // Simulate a random coin flip (50/50 chance)
+        const result = Math.random() < 0.5 ? 'heads' : 'tails';
+        const resultMessage = `The coin landed on ${result}.`;
+
+        // Log the result
+        console.log(resultMessage);
+        statusDisplay.textContent = resultMessage;
+
+        // Send winnings or loss to the appropriate wallet
+        if (result === 'heads') {
+            await sendSolToHouseWallet(0.02); // If user wins, they get 0.02 SOL from the house wallet
+            statusDisplay.textContent += "\nYou win! 0.02 SOL was sent to your wallet.";
+        } else {
+            statusDisplay.textContent += "\nYou lose! 0.01 SOL was sent to the house wallet.";
+        }
+    } catch (error) {
+        console.error("Error in coin flip:", error);
+        statusDisplay.textContent = "Error during coin flip.";
+    }
+}
+
+// Send SOL to the house wallet or user based on result
+async function sendSolToHouseWallet(amount) {
+    const transaction = new Transaction().add(
+        SystemProgram.transfer({
+            fromPubkey: houseWallet, // House wallet will send SOL
+            toPubkey: userWalletPublicKey, // User's wallet will receive SOL
+            lamports: amount * 1e9, // Convert SOL to lamports
+        })
+    );
+
+    try {
+        const provider = window.solana;
+        const { signature } = await provider.sendTransaction(transaction, [provider.publicKey]);
+        await connection.confirmTransaction(signature);
+        console.log("Transaction successful:", signature);
+    } catch (error) {
+        console.error("Error sending transaction:", error);
+        alert("Transaction failed.");
+    }
+}
+
+// Event Listeners
+connectWalletButton.addEventListener('click', connectWallet);
+betButton.addEventListener('click', placeBet);

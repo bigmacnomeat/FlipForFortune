@@ -1,73 +1,109 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Coin Flip Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            text-align: center;
-            padding: 20px;
+document.addEventListener('DOMContentLoaded', () => {
+    const connectButton = document.getElementById('connectButton');
+    const walletAddressDisplay = document.getElementById('walletAddress');
+    const statusDisplay = document.getElementById('status');
+    const betButton = document.getElementById('betButton');
+    const gameStatusDisplay = document.getElementById('gameStatus');
+
+    let userWalletPublicKey = null; // Store user's wallet public key
+
+    const recipientPublicKey = new solanaWeb3.PublicKey('BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr'); // This is the wallet to receive or send funds
+
+    // Connect wallet
+    connectButton.addEventListener('click', async () => {
+        try {
+            const provider = window.solana;
+            if (!provider) {
+                alert("Please install a Solana wallet like Phantom to connect.");
+                return;
+            }
+
+            // Connect to the wallet
+            const response = await provider.connect();
+            userWalletPublicKey = response.publicKey;
+
+            // Display wallet address
+            walletAddressDisplay.textContent = `Connected Wallet: ${userWalletPublicKey.toString()}`;
+
+            // Enable the bet button
+            betButton.disabled = false;
+            statusDisplay.textContent = "Wallet successfully connected!";
+            connectButton.textContent = "Disconnect Wallet";
+        } catch (error) {
+            console.error('Error connecting to wallet:', error);
+            alert('Failed to connect wallet.');
+        }
+    });
+
+    // Function to flip the coin (randomly returns heads or tails)
+    function flipCoin() {
+        return Math.random() < 0.5 ? 'heads' : 'tails';
+    }
+
+    // Bet button click event
+    betButton.addEventListener('click', async () => {
+        if (!userWalletPublicKey) {
+            alert("Please connect your wallet first.");
+            return;
         }
 
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        try {
+            // Set the bet amount
+            const betAmount = 0.01; // 0.01 SOL
+            const betInLamports = solanaWeb3.LAMPORTS_PER_SOL * betAmount; // Convert SOL to lamports
+
+            // Create a connection to the Solana network
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+
+            // Create a transaction to send the bet amount to the recipient
+            const transaction = new solanaWeb3.Transaction().add(
+                solanaWeb3.SystemProgram.transfer({
+                    fromPubkey: userWalletPublicKey,
+                    toPubkey: recipientPublicKey,
+                    lamports: betInLamports,
+                })
+            );
+
+            // Send the transaction
+            const { signature } = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [window.solana]);
+
+            gameStatusDisplay.textContent = "Bet placed! Flipping coin...";
+
+            // Simulate coin flip
+            const result = flipCoin();
+            setTimeout(async () => {
+                if (result === 'heads') {
+                    gameStatusDisplay.textContent = "You won! Sending 0.02 SOL...";
+                    // Transfer 0.02 SOL if the player wins
+                    await sendSolToWallet(0.02);
+                } else {
+                    gameStatusDisplay.textContent = "You lost. Sending your bet to the wallet...";
+                    // Transfer the 0.01 SOL bet to the recipient if the player loses
+                    await sendSolToWallet(0.01);
+                }
+            }, 2000); // Simulate a 2-second delay for coin flip
+        } catch (error) {
+            console.error('Error placing the bet:', error);
+            alert('Bet failed. Please try again.');
         }
+    });
 
-        button {
-            padding: 10px 20px;
-            background-color: #0078d4;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 0;
+    // Send SOL to the recipient wallet
+    async function sendSolToWallet(amountInSol) {
+        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+        const transaction = new solanaWeb3.Transaction().add(
+            solanaWeb3.SystemProgram.transfer({
+                fromPubkey: userWalletPublicKey,
+                toPubkey: recipientPublicKey,
+                lamports: solanaWeb3.LAMPORTS_PER_SOL * amountInSol,
+            })
+        );
+        try {
+            const { signature } = await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [window.solana]);
+            console.log(`Transaction successful with signature: ${signature}`);
+        } catch (error) {
+            console.error('Error sending SOL:', error);
+            alert('Error during transaction. Please try again.');
         }
-
-        button:hover {
-            background-color: #005bb5;
-        }
-
-        #status {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .game-section {
-            margin-top: 30px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Connect Your Wallet</h1>
-        <button id="connectButton">Connect Wallet</button>
-        <p id="walletAddress"></p>
-        <p id="status"></p>
-
-        <div class="game-section">
-            <h2>Coin Flip Game</h2>
-            <button id="betButton" disabled>Place Bet (0.01 SOL)</button>
-            <p id="gameStatus"></p>
-        </div>
-    </div>
-
-    <!-- Include the Buffer polyfill -->
-    <script src="https://cdn.jsdelivr.net/npm/buffer@5.7.1/index.min.js"></script>
-
-    <!-- Include Solana Web3.js -->
-    <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.min.js"></script>
-
-    <!-- Include the main JavaScript file -->
-    <script src="script.js"></script> <!-- Link to the external JavaScript -->
-</body>
-</html>
+    }
+});
